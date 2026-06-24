@@ -40,7 +40,9 @@
     photoInput: document.querySelector("#photo-upload"),
     photoInputPreview: document.querySelector("#photo-input-preview"),
     photoStatus: document.querySelector("#photo-status"),
+    previewScroll: document.querySelector(".preview-scroll"),
     preview: document.querySelector("#document-preview"),
+    pageCount: document.querySelector("#page-count"),
     saveStatus: document.querySelector("#save-status"),
     progressText: document.querySelector("#progress-text"),
     completionProgress: document.querySelector("#completion-progress"),
@@ -56,6 +58,7 @@
     template: createDefaultTemplate(),
   };
   let saveTimer = null;
+  let paginationFrame = null;
 
   function createId(prefix) {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -369,6 +372,7 @@
     dom.printButton.addEventListener("click", () => window.print());
 
     window.addEventListener("beforeunload", saveStateNow);
+    window.addEventListener("resize", schedulePreviewPagination);
   }
 
   function handleFormChange(event) {
@@ -1177,26 +1181,24 @@
 
   function renderPreview() {
     const preview = dom.preview;
-    preview.className = `document-sheet layout-${state.template.layout} font-${state.template.fontSize}`;
+    preview.className = `preview-pages layout-${state.template.layout} font-${state.template.fontSize}`;
+    preview.style.zoom = "1";
     preview.replaceChildren();
 
-    const contentFragment = document.createDocumentFragment();
-    contentFragment.append(createDocumentTopline());
+    const flowNodes = [createDocumentTopline()];
 
     let visibleContentCount = 0;
     let sectionNumber = 1;
     const nextSectionNumber = () => String(sectionNumber++).padStart(2, "0");
 
     if (state.template.visibility.basic && hasBasicContent()) {
-      contentFragment.append(createIdentityBlock());
+      flowNodes.push(createIdentityBlock());
       visibleContentCount += 1;
     }
 
     const education = nonEmptyEducation();
     if (state.template.visibility.education && education.length > 0) {
-      contentFragment.append(
-        createEducationSection(education, nextSectionNumber()),
-      );
+      flowNodes.push(createEducationSection(education, nextSectionNumber()));
       visibleContentCount += 1;
     }
 
@@ -1212,7 +1214,7 @@
       state.template.visibility.workExperiences &&
       workExperiences.length > 0
     ) {
-      contentFragment.append(
+      flowNodes.push(
         createWorkExperienceSection(workExperiences, nextSectionNumber()),
       );
       visibleContentCount += 1;
@@ -1220,7 +1222,7 @@
 
     const projects = nonEmptyProjects();
     if (state.template.visibility.projects && projects.length > 0) {
-      contentFragment.append(createProjectSection(projects, nextSectionNumber()));
+      flowNodes.push(createProjectSection(projects, nextSectionNumber()));
       visibleContentCount += 1;
     }
 
@@ -1233,7 +1235,7 @@
       "details",
     ]);
     if (state.template.visibility.awards && awards.length > 0) {
-      contentFragment.append(createAwardSection(awards, nextSectionNumber()));
+      flowNodes.push(createAwardSection(awards, nextSectionNumber()));
       visibleContentCount += 1;
     }
 
@@ -1246,9 +1248,7 @@
       "details",
     ]);
     if (state.template.visibility.activities && activities.length > 0) {
-      contentFragment.append(
-        createActivitySection(activities, nextSectionNumber()),
-      );
+      flowNodes.push(createActivitySection(activities, nextSectionNumber()));
       visibleContentCount += 1;
     }
 
@@ -1263,7 +1263,7 @@
       state.template.visibility.certifications &&
       certifications.length > 0
     ) {
-      contentFragment.append(
+      flowNodes.push(
         createCertificationSection(certifications, nextSectionNumber()),
       );
       visibleContentCount += 1;
@@ -1271,22 +1271,348 @@
 
     const skills = nonEmptySkills();
     if (state.template.visibility.skills && skills.length > 0) {
-      contentFragment.append(createSkillsSection(skills, nextSectionNumber()));
+      flowNodes.push(createSkillsSection(skills, nextSectionNumber()));
       visibleContentCount += 1;
     }
 
     const essays = nonEmptyEssays();
     if (state.template.visibility.essays && essays.length > 0) {
-      contentFragment.append(createEssaySection(essays, nextSectionNumber()));
+      flowNodes.push(createEssaySection(essays, nextSectionNumber()));
       visibleContentCount += 1;
     }
 
     if (visibleContentCount === 0) {
-      contentFragment.append(createEmptyDocumentMessage());
+      flowNodes.push(createEmptyDocumentMessage());
     }
 
-    preview.append(contentFragment);
+    paginateDocument(flowNodes);
     updateCompletionProgress();
+  }
+
+  function schedulePreviewPagination() {
+    window.cancelAnimationFrame(paginationFrame);
+    paginationFrame = window.requestAnimationFrame(renderPreview);
+  }
+
+  function paginateDocument(flowNodes) {
+    const context = {
+      pages: [],
+      current: null,
+    };
+
+    context.current = createDocumentPage(context, 1);
+
+    flowNodes.forEach((node) => {
+      if (node.classList?.contains("document-section")) {
+        paginateSection(context, node);
+      } else {
+        appendAtomicNode(context, node);
+      }
+    });
+
+    updatePageNumbers(context.pages);
+  }
+
+  function createDocumentPage(context, pageNumber) {
+    const page = createElement(
+      "article",
+      `document-sheet document-page layout-${state.template.layout} font-${state.template.fontSize}`,
+    );
+    const content = createElement("div", "document-page-content");
+    const footer = createElement("footer", "document-page-footer");
+
+    page.dataset.pageNumber = String(pageNumber);
+
+    if (pageNumber > 1) {
+      content.append(createRunningHeader());
+    }
+
+    page.append(content, footer);
+    dom.preview.append(page);
+
+    const pageState = { page, content, footer };
+    context.pages.push(pageState);
+    return pageState;
+  }
+
+  function createRunningHeader() {
+    const header = createElement("header", "document-running-header");
+    const title = document.createElement("span");
+    const name = document.createElement("span");
+
+    title.textContent = clean(state.template.title) || "이력서 및 자기소개서";
+    name.textContent = clean(state.student.basic.name);
+    header.append(title);
+    if (name.textContent) header.append(name);
+    return header;
+  }
+
+  function appendAtomicNode(context, node) {
+    const hadContent = pageHasFlowContent(context.current.content);
+    context.current.content.append(node);
+
+    if (pageIsOverflowing(context.current.content) && hadContent) {
+      node.remove();
+      context.current = createDocumentPage(context, context.pages.length + 1);
+      context.current.content.append(node);
+    }
+
+    if (pageIsOverflowing(context.current.content)) {
+      node.classList.add("oversized-page-block");
+    }
+  }
+
+  function paginateSection(context, sourceSection) {
+    const sourceList = Array.from(sourceSection.children).find(
+      (child) => !child.classList.contains("document-section-title"),
+    );
+    const entries = sourceList ? Array.from(sourceList.children) : [];
+    let continuation = false;
+    let shell = createAndPlaceSectionShell(
+      context,
+      sourceSection,
+      continuation,
+    );
+
+    if (entries.length === 0) return;
+
+    entries.forEach((entry) => {
+      shell.list.append(entry);
+
+      if (!pageIsOverflowing(context.current.content)) return;
+
+      entry.remove();
+      const sectionHasEntries = shell.list.children.length > 0;
+
+      if (!sectionHasEntries) {
+        shell.section.remove();
+      }
+
+      context.current = createDocumentPage(context, context.pages.length + 1);
+      continuation = continuation || sectionHasEntries;
+      shell = createAndPlaceSectionShell(context, sourceSection, continuation);
+      shell.list.append(entry);
+
+      if (!pageIsOverflowing(context.current.content)) return;
+
+      entry.remove();
+      if (entry.classList.contains("essay-entry")) {
+        splitEssayEntryAcrossPages(context, sourceSection, shell, entry);
+      } else {
+        splitEntryAcrossPages(context, sourceSection, shell, entry);
+      }
+    });
+  }
+
+  function createAndPlaceSectionShell(context, sourceSection, continuation) {
+    let shell = createSectionShell(sourceSection, continuation);
+    const hadContent = pageHasFlowContent(context.current.content);
+    context.current.content.append(shell.section);
+
+    if (pageIsOverflowing(context.current.content) && hadContent) {
+      shell.section.remove();
+      context.current = createDocumentPage(context, context.pages.length + 1);
+      shell = createSectionShell(sourceSection, continuation);
+      context.current.content.append(shell.section);
+    }
+
+    return shell;
+  }
+
+  function createSectionShell(sourceSection, continuation) {
+    const section = sourceSection.cloneNode(false);
+    const sourceTitle = sourceSection.querySelector(".document-section-title");
+    const sourceList = Array.from(sourceSection.children).find(
+      (child) => !child.classList.contains("document-section-title"),
+    );
+    const title = sourceTitle.cloneNode(true);
+    const list = sourceList ? sourceList.cloneNode(false) : document.createElement("div");
+
+    if (continuation) {
+      const label = title.lastElementChild;
+      if (label) label.textContent = `${label.textContent} (계속)`;
+      section.classList.add("continued-section");
+    }
+
+    section.append(title, list);
+    return { section, list };
+  }
+
+  function splitEssayEntryAcrossPages(context, sourceSection, shell, entry) {
+    const originalAnswer = entry.querySelector(".essay-answer")?.textContent || "";
+    let remainingText = originalAnswer.trim();
+    let firstChunk = true;
+
+    if (!remainingText) {
+      shell.list.append(entry);
+      return;
+    }
+
+    while (remainingText) {
+      const chunk = entry.cloneNode(true);
+      const answer = chunk.querySelector(".essay-answer");
+      const question = chunk.querySelector(".essay-question");
+
+      if (!firstChunk && question) {
+        question.textContent = `${question.textContent} (계속)`;
+      }
+
+      shell.list.append(chunk);
+      answer.textContent = remainingText;
+
+      if (!pageIsOverflowing(context.current.content)) break;
+
+      const fittingLength = findFittingTextLength(
+        context.current.content,
+        answer,
+        remainingText,
+      );
+
+      if (fittingLength < 20) {
+        answer.textContent = remainingText;
+        chunk.classList.add("oversized-page-block");
+        break;
+      }
+
+      const breakIndex = findNaturalTextBreak(remainingText, fittingLength);
+      answer.textContent = remainingText.slice(0, breakIndex).trim();
+      remainingText = remainingText.slice(breakIndex).trim();
+
+      if (remainingText) {
+        context.current = createDocumentPage(context, context.pages.length + 1);
+        shell = createAndPlaceSectionShell(context, sourceSection, true);
+      }
+
+      firstChunk = false;
+    }
+  }
+
+  function splitEntryAcrossPages(context, sourceSection, shell, entry) {
+    const children = Array.from(entry.children);
+    const repeatableHeading = children.find((child) =>
+      child.matches(".project-heading"),
+    );
+    let chunk = entry.cloneNode(false);
+    let chunkHasContent = false;
+
+    shell.list.append(chunk);
+
+    children.forEach((child, childIndex) => {
+      chunk.append(child);
+
+      if (!pageIsOverflowing(context.current.content)) {
+        chunkHasContent = true;
+        return;
+      }
+
+      child.remove();
+
+      if (!chunkHasContent) {
+        chunk.append(child);
+        chunk.classList.add("oversized-page-block");
+        chunkHasContent = true;
+        return;
+      }
+
+      context.current = createDocumentPage(context, context.pages.length + 1);
+      shell = createAndPlaceSectionShell(context, sourceSection, true);
+      chunk = entry.cloneNode(false);
+      chunk.classList.add("continued-entry");
+
+      if (repeatableHeading && childIndex > 0) {
+        const repeatedHeading = repeatableHeading.cloneNode(true);
+        repeatedHeading.classList.add("continued-entry-heading");
+        chunk.append(repeatedHeading);
+      }
+
+      chunk.append(child);
+      shell.list.append(chunk);
+      chunkHasContent = true;
+
+      if (pageIsOverflowing(context.current.content)) {
+        chunk.classList.add("oversized-page-block");
+      }
+    });
+  }
+
+  function findFittingTextLength(content, textElement, text) {
+    let low = 1;
+    let high = text.length;
+    let best = 0;
+
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      textElement.textContent = text.slice(0, middle);
+
+      if (pageIsOverflowing(content)) {
+        high = middle - 1;
+      } else {
+        best = middle;
+        low = middle + 1;
+      }
+    }
+
+    return best;
+  }
+
+  function findNaturalTextBreak(text, maximumLength) {
+    if (maximumLength >= text.length) return text.length;
+
+    const minimumLength = Math.max(1, Math.floor(maximumLength * 0.65));
+    const candidates = [
+      text.lastIndexOf("\n", maximumLength),
+      text.lastIndexOf(". ", maximumLength) + 1,
+      text.lastIndexOf("다. ", maximumLength) + 2,
+      text.lastIndexOf(" ", maximumLength),
+    ].filter((index) => index >= minimumLength);
+
+    return candidates.length ? Math.max(...candidates) : maximumLength;
+  }
+
+  function pageHasFlowContent(content) {
+    return Array.from(content.children).some(
+      (child) => !child.classList.contains("document-running-header"),
+    );
+  }
+
+  function pageIsOverflowing(content) {
+    if (!content.clientHeight) return false;
+    const contentTop = content.getBoundingClientRect().top;
+    const usedHeight = Array.from(content.children).reduce((maximum, child) => {
+      const rect = child.getBoundingClientRect();
+      const marginBottom =
+        Number.parseFloat(window.getComputedStyle(child).marginBottom) || 0;
+      return Math.max(maximum, rect.bottom - contentTop + marginBottom);
+    }, 0);
+
+    return usedHeight > content.clientHeight - 16;
+  }
+
+  function updatePageNumbers(pages) {
+    const totalPages = Math.max(1, pages.length);
+
+    pages.forEach((pageState, index) => {
+      pageState.footer.textContent = `${index + 1} / ${totalPages}`;
+      pageState.page.setAttribute(
+        "aria-label",
+        `A4 문서 ${index + 1}쪽, 전체 ${totalPages}쪽`,
+      );
+    });
+
+    dom.pageCount.textContent = `A4 · ${totalPages}쪽`;
+    applyPreviewScale(pages);
+  }
+
+  function applyPreviewScale(pages) {
+    const firstPage = pages[0]?.page;
+    if (!firstPage || !dom.previewScroll?.clientWidth) return;
+
+    const availableWidth = Math.max(320, dom.previewScroll.clientWidth - 14);
+    const pageWidth = firstPage.offsetWidth;
+    if (!pageWidth) return;
+
+    const scale = Math.min(1, availableWidth / pageWidth);
+    dom.preview.style.zoom = String(Math.max(0.55, scale));
   }
 
   function createDocumentTopline() {
