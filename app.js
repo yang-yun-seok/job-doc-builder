@@ -6,20 +6,28 @@
     template: "jobDocBuilder.templateSettings.v1",
   };
 
-  const ESSAY_META = [
-    { key: "motivation", title: "지원 동기", countId: "count-motivation" },
-    { key: "strength", title: "직무 관련 강점", countId: "count-strength" },
+  const DEFAULT_ESSAYS = [
     {
-      key: "collaboration",
+      title: "지원 동기",
+      guide:
+        "왜 이 직무를 선택했는지, 어떤 경험 때문에 관심을 갖게 되었는지 적어 보세요.",
+    },
+    {
+      title: "직무 관련 강점",
+      guide: "성격 장점보다는 실제 업무에 도움이 되는 강점을 적어 보세요.",
+    },
+    {
       title: "프로젝트 또는 협업 경험",
-      countId: "count-collaboration",
+      guide: "내가 맡은 역할, 실제로 한 일, 결과를 중심으로 적어 보세요.",
     },
     {
-      key: "problemSolving",
       title: "문제 해결 경험",
-      countId: "count-problem",
+      guide: "문제 상황 → 원인 파악 → 해결 과정 → 결과 순서로 적어 보세요.",
     },
-    { key: "goal", title: "입사 후 목표", countId: "count-goal" },
+    {
+      title: "입사 후 목표",
+      guide: "회사에서 어떤 기획자로 성장하고 싶은지 구체적으로 적어 보세요.",
+    },
   ];
 
   const LAYOUT_NOTES = {
@@ -37,6 +45,9 @@
     activityItems: document.querySelector("#activity-items"),
     certificationItems: document.querySelector("#certification-items"),
     skillItems: document.querySelector("#skill-items"),
+    essayItems: document.querySelector("#essay-items"),
+    essayPreset: document.querySelector("#essay-preset"),
+    customEssayTitle: document.querySelector("#custom-essay-title"),
     photoInput: document.querySelector("#photo-upload"),
     photoInputPreview: document.querySelector("#photo-input-preview"),
     photoStatus: document.querySelector("#photo-status"),
@@ -51,6 +62,9 @@
     resetButton: document.querySelector("#reset-data"),
     sampleButton: document.querySelector("#load-sample"),
     printButton: document.querySelector("#print-document"),
+    openGuideButton: document.querySelector("#open-guide"),
+    closeGuideButton: document.querySelector("#close-guide"),
+    guideDialog: document.querySelector("#guide-dialog"),
   };
 
   let state = {
@@ -146,6 +160,15 @@
     };
   }
 
+  function createEmptyEssay(title = "", guide = "") {
+    return {
+      id: createId("essay"),
+      title,
+      content: "",
+      guide,
+    };
+  }
+
   function createDefaultStudent() {
     return {
       basic: {
@@ -157,6 +180,7 @@
         location: "",
         link: "",
         availability: "",
+        birthDate: "",
         photo: "",
       },
       education: [createEmptyEducation()],
@@ -166,13 +190,9 @@
       activities: [createEmptyActivity()],
       certifications: [createEmptyCertification()],
       skills: [createEmptySkill()],
-      essays: {
-        motivation: "",
-        strength: "",
-        collaboration: "",
-        problemSolving: "",
-        goal: "",
-      },
+      essays: DEFAULT_ESSAYS.map((essay) =>
+        createEmptyEssay(essay.title, essay.guide),
+      ),
     };
   }
 
@@ -208,6 +228,7 @@
         location: "경기도 성남시",
         link: "https://www.notion.so/example-game-planner",
         availability: "2026년 7월부터 근무 가능",
+        birthDate: "2001.03.15",
         photo: "",
       },
       education: [
@@ -330,18 +351,43 @@
           level: "팀 문서 구조화와 일정·회의 기록 관리 가능",
         },
       ],
-      essays: {
-        motivation:
-          "게임을 플레이하며 재미를 느끼는 지점이 어떤 규칙과 보상 구조에서 만들어지는지 분석하는 과정에 흥미를 느껴 시스템 기획을 선택했습니다. 교육 과정에서 성장 시스템을 직접 문서화하며, 아이디어를 개발자가 이해할 수 있는 규칙으로 바꾸는 일에 적성이 있다는 것을 확인했습니다.",
-        strength:
-          "복잡한 내용을 표와 흐름도로 나누어 정리하는 것이 강점입니다. 팀 프로젝트에서는 성장 조건과 재화 흐름을 한 문서에서 확인할 수 있도록 구조를 통일했고, 변경된 수치가 다른 규칙에 어떤 영향을 주는지 함께 기록해 팀원의 확인 시간을 줄였습니다.",
-        collaboration:
-          "수집형 RPG 프로젝트에서 시스템 기획을 맡아 개발 역할의 팀원과 매주 구현 범위를 조율했습니다. 규칙 설명만 전달하지 않고 화면 예시와 예외 상황을 함께 작성했으며, 구현이 어려운 기능은 핵심 경험을 유지하는 범위에서 단순화했습니다. 그 결과 정해진 기간 안에 주요 성장 흐름을 시연할 수 있었습니다.",
-        problemSolving:
-          "초기 테스트에서 강화 재화가 빠르게 부족해 플레이가 중단되는 문제가 있었습니다. 구간별 획득량과 소비량을 비교해 초반 보상 간격이 긴 것을 원인으로 판단했습니다. 초반 임무 보상을 조정하고 강화 비용 증가 폭을 완화한 뒤 다시 테스트했고, 목표 구간까지 자연스럽게 진행되는 것을 확인했습니다.",
-        goal:
-          "입사 후에는 라이브 게임의 지표와 사용자 반응을 함께 확인하며 시스템을 개선할 수 있는 기획자로 성장하고 싶습니다. 먼저 팀의 문서 형식과 개발 프로세스를 정확히 익히고, 작은 기능이라도 의도와 예외 조건이 명확한 기획서를 작성하겠습니다.",
-      },
+      essays: [
+        {
+          id: createId("essay"),
+          title: "지원 동기",
+          guide: DEFAULT_ESSAYS[0].guide,
+          content:
+            "게임을 플레이하며 재미를 느끼는 지점이 어떤 규칙과 보상 구조에서 만들어지는지 분석하는 과정에 흥미를 느껴 시스템 기획을 선택했습니다. 교육 과정에서 성장 시스템을 직접 문서화하며, 아이디어를 개발자가 이해할 수 있는 규칙으로 바꾸는 일에 적성이 있다는 것을 확인했습니다.",
+        },
+        {
+          id: createId("essay"),
+          title: "직무 관련 강점",
+          guide: DEFAULT_ESSAYS[1].guide,
+          content:
+            "복잡한 내용을 표와 흐름도로 나누어 정리하는 것이 강점입니다. 팀 프로젝트에서는 성장 조건과 재화 흐름을 한 문서에서 확인할 수 있도록 구조를 통일했고, 변경된 수치가 다른 규칙에 어떤 영향을 주는지 함께 기록해 팀원의 확인 시간을 줄였습니다.",
+        },
+        {
+          id: createId("essay"),
+          title: "프로젝트 또는 협업 경험",
+          guide: DEFAULT_ESSAYS[2].guide,
+          content:
+            "수집형 RPG 프로젝트에서 시스템 기획을 맡아 개발 역할의 팀원과 매주 구현 범위를 조율했습니다. 규칙 설명만 전달하지 않고 화면 예시와 예외 상황을 함께 작성했으며, 구현이 어려운 기능은 핵심 경험을 유지하는 범위에서 단순화했습니다. 그 결과 정해진 기간 안에 주요 성장 흐름을 시연할 수 있었습니다.",
+        },
+        {
+          id: createId("essay"),
+          title: "문제 해결 경험",
+          guide: DEFAULT_ESSAYS[3].guide,
+          content:
+            "초기 테스트에서 강화 재화가 빠르게 부족해 플레이가 중단되는 문제가 있었습니다. 구간별 획득량과 소비량을 비교해 초반 보상 간격이 긴 것을 원인으로 판단했습니다. 초반 임무 보상을 조정하고 강화 비용 증가 폭을 완화한 뒤 다시 테스트했고, 목표 구간까지 자연스럽게 진행되는 것을 확인했습니다.",
+        },
+        {
+          id: createId("essay"),
+          title: "입사 후 목표",
+          guide: DEFAULT_ESSAYS[4].guide,
+          content:
+            "입사 후에는 라이브 게임의 지표와 사용자 반응을 함께 확인하며 시스템을 개선할 수 있는 기획자로 성장하고 싶습니다. 먼저 팀의 문서 형식과 개발 프로세스를 정확히 익히고, 작은 기능이라도 의도와 예외 조건이 명확한 기획서를 작성하겠습니다.",
+        },
+      ],
     };
   }
 
@@ -370,6 +416,9 @@
     dom.resetButton.addEventListener("click", resetAllData);
     dom.sampleButton.addEventListener("click", loadSampleData);
     dom.printButton.addEventListener("click", () => window.print());
+    dom.openGuideButton.addEventListener("click", openGuide);
+    dom.closeGuideButton.addEventListener("click", closeGuide);
+    dom.guideDialog.addEventListener("click", handleGuideBackdropClick);
 
     window.addEventListener("beforeunload", saveStateNow);
     window.addEventListener("resize", schedulePreviewPagination);
@@ -444,6 +493,10 @@
       focusLatestItem(dom.skillItems);
     }
 
+    if (action === "add-essay") {
+      addEssayItem();
+    }
+
     if (action === "remove-education") {
       removeRepeatItem("education", button.dataset.itemId);
     }
@@ -470,6 +523,10 @@
 
     if (action === "remove-skill") {
       removeRepeatItem("skills", button.dataset.itemId);
+    }
+
+    if (action === "remove-essay") {
+      removeRepeatItem("essays", button.dataset.itemId);
     }
 
     if (action === "remove-photo") {
@@ -627,6 +684,14 @@
     }
 
     item[field] = target.value;
+    if (type === "essays" && field === "content") {
+      const counter = dom.form.querySelector(
+        `[data-essay-count="${itemId}"]`,
+      );
+      if (counter) {
+        counter.textContent = `${target.value.length.toLocaleString("ko-KR")}자`;
+      }
+    }
   }
 
   function removeRepeatItem(type, itemId) {
@@ -651,6 +716,7 @@
       activities: createEmptyActivity,
       certifications: createEmptyCertification,
       skills: createEmptySkill,
+      essays: createEmptyEssay,
     };
 
     return factories[type]?.() || { id: createId(type) };
@@ -664,6 +730,7 @@
     renderActivityInputs();
     renderCertificationInputs();
     renderSkillInputs();
+    renderEssayInputs();
   }
 
   function renderEducationInputs() {
@@ -718,6 +785,14 @@
     dom.skillItems.replaceChildren(
       ...state.student.skills.map((item, index) =>
         createSkillInputItem(item, index),
+      ),
+    );
+  }
+
+  function renderEssayInputs() {
+    dom.essayItems.replaceChildren(
+      ...state.student.essays.map((item, index) =>
+        createEssayInputItem(item, index),
       ),
     );
   }
@@ -1074,6 +1149,93 @@
 
     wrapper.append(header, grid);
     return wrapper;
+  }
+
+  function createEssayInputItem(item, index) {
+    const wrapper = createElement("article", "repeat-item essay-input-item");
+    wrapper.dataset.itemId = item.id;
+    const header = createRepeatHeader(
+      `자기소개서 문항 ${index + 1}`,
+      "remove-essay",
+      item.id,
+    );
+    const grid = createElement("div", "field-grid");
+    const titleField = createRepeatField(
+      "문항 제목",
+      item,
+      "essays",
+      "title",
+      "예: 지원 동기",
+    );
+    const contentField = createRepeatField(
+      "작성 내용",
+      item,
+      "essays",
+      "content",
+      "이 문항에 맞는 내용을 작성하세요.",
+      false,
+      true,
+    );
+    const textarea = contentField.querySelector("textarea");
+    const counter = createElement("span", "character-count essay-character-count");
+
+    textarea.rows = 7;
+    counter.dataset.essayCount = item.id;
+    counter.textContent = `${item.content.length.toLocaleString("ko-KR")}자`;
+    contentField.querySelector("label").after(counter);
+
+    grid.append(titleField, contentField);
+
+    if (clean(item.guide)) {
+      const guide = createElement("p", "field-help essay-guide");
+      guide.textContent = item.guide;
+      grid.append(guide);
+    }
+
+    wrapper.append(header, grid);
+    return wrapper;
+  }
+
+  function addEssayItem() {
+    const presetTitle = clean(dom.essayPreset.value);
+    const customTitle = clean(dom.customEssayTitle.value);
+    const title = customTitle || presetTitle;
+
+    if (!title) {
+      dom.customEssayTitle.focus();
+      dom.customEssayTitle.setAttribute(
+        "placeholder",
+        "추가할 문항 제목을 먼저 입력해 주세요.",
+      );
+      return;
+    }
+
+    const preset = DEFAULT_ESSAYS.find((essay) => essay.title === title);
+    state.student.essays.push(createEmptyEssay(title, preset?.guide || ""));
+    dom.essayPreset.value = "";
+    dom.customEssayTitle.value = "";
+    renderRepeaters();
+    focusLatestItem(dom.essayItems);
+  }
+
+  function openGuide() {
+    if (typeof dom.guideDialog.showModal === "function") {
+      dom.guideDialog.showModal();
+      return;
+    }
+    dom.guideDialog.setAttribute("open", "");
+  }
+
+  function closeGuide() {
+    if (typeof dom.guideDialog.close === "function") {
+      dom.guideDialog.close();
+      return;
+    }
+    dom.guideDialog.removeAttribute("open");
+  }
+
+  function handleGuideBackdropClick(event) {
+    if (event.target === dom.guideDialog) closeGuide();
   }
 
   function createRepeatHeader(title, action, itemId) {
@@ -1634,10 +1796,7 @@
       copy.append(intro);
     }
 
-    const date = createElement("p", "document-date");
-    date.textContent = formatToday();
-
-    header.append(copy, date);
+    header.append(copy);
     return header;
   }
 
@@ -1682,6 +1841,7 @@
 
     appendContact(contacts, "이메일", basic.email);
     appendContact(contacts, "연락처", basic.phone);
+    appendContact(contacts, "생년월일", basic.birthDate);
     appendContact(contacts, "거주 지역", basic.location);
     appendContact(contacts, "지원 시기", basic.availability);
     appendContact(contacts, "링크", basic.link, true);
@@ -2102,11 +2262,13 @@
   }
 
   function nonEmptyEssays() {
-    return ESSAY_META.map((meta, index) => ({
-      ...meta,
-      number: index + 1,
-      value: clean(state.student.essays[meta.key]),
-    })).filter((item) => item.value);
+    return state.student.essays
+      .filter((item) => clean(item.title) && clean(item.content))
+      .map((item, index) => ({
+        ...item,
+        number: index + 1,
+        value: clean(item.content),
+      }));
   }
 
   function updateCompletionProgress() {
@@ -2154,12 +2316,12 @@
   }
 
   function renderEssayCounts() {
-    ESSAY_META.forEach((meta) => {
-      const counter = document.getElementById(meta.countId);
+    state.student.essays.forEach((essay) => {
+      const counter = dom.form.querySelector(
+        `[data-essay-count="${essay.id}"]`,
+      );
       if (counter) {
-        counter.textContent = `${state.student.essays[meta.key].length.toLocaleString(
-          "ko-KR",
-        )}자`;
+        counter.textContent = `${essay.content.length.toLocaleString("ko-KR")}자`;
       }
     });
   }
@@ -2217,6 +2379,7 @@
       ? source.certifications.map(sanitizeCertification).filter(Boolean)
       : fallback.certifications;
     const skills = sanitizeSkills(source.skills);
+    const essays = sanitizeEssays(source.essays, fallback.essays);
 
     return {
       basic: {
@@ -2235,10 +2398,7 @@
         ? certifications
         : [createEmptyCertification()],
       skills: skills.length ? skills : [createEmptySkill()],
-      essays: {
-        ...fallback.essays,
-        ...sanitizeTextObject(source.essays, Object.keys(fallback.essays)),
-      },
+      essays,
     };
   }
 
@@ -2332,6 +2492,39 @@
       name: coerceText(item.name),
       level: coerceText(item.level),
     };
+  }
+
+  function sanitizeEssay(item) {
+    if (!item || typeof item !== "object") return null;
+    return {
+      id: coerceText(item.id) || createId("essay"),
+      title: coerceText(item.title),
+      content: coerceText(item.content),
+      guide: coerceText(item.guide),
+    };
+  }
+
+  function sanitizeEssays(source, fallback) {
+    if (Array.isArray(source)) {
+      return source.map(sanitizeEssay).filter(Boolean);
+    }
+
+    if (!source || typeof source !== "object") return fallback;
+
+    const legacyFields = [
+      ["motivation", DEFAULT_ESSAYS[0]],
+      ["strength", DEFAULT_ESSAYS[1]],
+      ["collaboration", DEFAULT_ESSAYS[2]],
+      ["problemSolving", DEFAULT_ESSAYS[3]],
+      ["goal", DEFAULT_ESSAYS[4]],
+    ];
+
+    return legacyFields.map(([key, meta]) => ({
+      id: createId("essay"),
+      title: meta.title,
+      content: coerceText(source[key]),
+      guide: meta.guide,
+    }));
   }
 
   function sanitizeSkills(source) {
@@ -2573,18 +2766,6 @@
         : `https://${text}`;
       const url = new URL(candidate);
       return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-    } catch {
-      return "";
-    }
-  }
-
-  function formatToday() {
-    try {
-      return new Intl.DateTimeFormat("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date());
     } catch {
       return "";
     }

@@ -517,6 +517,38 @@ summary:focus-visible {
   gap: 22px;
 }
 
+.essay-add-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dfe3e7;
+  border-radius: 6px;
+  background: #fafbfc;
+}
+
+.essay-add-panel .button-add {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.essay-input-item .field {
+  position: relative;
+}
+
+.essay-character-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.essay-guide {
+  margin: -4px 0 0;
+  padding: 9px 10px;
+  border-left: 2px solid #aeb6bf;
+  background: #f4f6f8;
+}
+
 .photo-upload-panel {
   display: grid;
   grid-template-columns: 92px minmax(0, 1fr);
@@ -840,14 +872,6 @@ summary:focus-visible {
   font-size: 0.88em;
   line-height: 1.58;
   white-space: pre-wrap;
-}
-
-.document-date {
-  flex: 0 0 auto;
-  margin: 7px 0 0;
-  color: #727a84;
-  font-size: 0.72em;
-  font-variant-numeric: tabular-nums;
 }
 
 .identity-block {
@@ -1341,7 +1365,8 @@ summary:focus-visible {
 
   .field-grid.two-columns,
   .checkbox-grid,
-  .visibility-grid {
+  .visibility-grid,
+  .essay-add-panel {
     grid-template-columns: 1fr;
   }
 
@@ -1419,6 +1444,7 @@ summary:focus-visible {
   .app-header,
   .editor-column,
   .preview-heading,
+  .guide-dialog,
   .noscript-message {
     display: none !important;
   }
@@ -1506,4 +1532,87 @@ summary:focus-visible {
   border: 1px solid #e2b4b2;
   color: #7e302e;
   background: #fff7f7;
+}
+
+/* =========================
+   사용 설명서
+   ========================= */
+
+.guide-dialog {
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(780px, calc(100vh - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+}
+
+.guide-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(3px);
+}
+
+.guide-header {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.guide-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.035em;
+}
+
+.guide-content {
+  display: grid;
+  gap: 0;
+  padding: 4px 22px 24px;
+  overflow: auto;
+}
+
+.guide-content section {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 13px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e4e7ea;
+}
+
+.guide-content section:last-child {
+  border-bottom: 0;
+}
+
+.guide-step {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.guide-content h3 {
+  margin: 1px 0 5px;
+  font-size: 0.93rem;
+}
+
+.guide-content p {
+  margin: 0;
+  color: #5f6872;
+  font-size: 0.79rem;
+  line-height: 1.65;
 }

@@ -20,6 +20,9 @@
       </div>
 
       <div class="header-actions" aria-label="내 문서 작업">
+        <button class="button button-secondary" id="open-guide" type="button">
+          사용 설명서
+        </button>
         <button class="button button-secondary" id="refresh-preview" type="button">
           문서 다시 보기
         </button>
@@ -65,6 +68,105 @@
         </p>
 
         <form id="document-form" novalidate>
+          <details class="tool-section template-section" open>
+            <summary>
+              <span class="summary-number">00</span>
+              <span>
+                <strong>문서 모양 설정</strong>
+                <small>먼저 문서에 보여줄 항목과 전체 모양을 정할 수 있어요.</small>
+              </span>
+            </summary>
+
+            <div class="section-body">
+              <fieldset class="check-fieldset">
+                <legend>문서에 보여줄 항목</legend>
+                <div class="checkbox-grid visibility-grid">
+                  <label>
+                    <input type="checkbox" data-template-visibility="basic" />
+                    기본 정보 표시
+                  </label>
+                  <label>
+                    <input type="checkbox" data-template-visibility="education" />
+                    학력 / 교육 이력 표시
+                  </label>
+                  <label>
+                    <input type="checkbox" data-template-visibility="projects" />
+                    프로젝트 경험 표시
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      data-template-visibility="workExperiences"
+                    />
+                    인턴 / 실무 경험 표시
+                  </label>
+                  <label>
+                    <input type="checkbox" data-template-visibility="awards" />
+                    수상 / 공모전 표시
+                  </label>
+                  <label>
+                    <input type="checkbox" data-template-visibility="activities" />
+                    대외활동 / 기타 표시
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      data-template-visibility="certifications"
+                    />
+                    자격증 / 수료 표시
+                  </label>
+                  <label>
+                    <input type="checkbox" data-template-visibility="skills" />
+                    보유 역량 표시
+                  </label>
+                  <label>
+                    <input type="checkbox" data-template-visibility="essays" />
+                    자기소개서 표시
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="field">
+                <label for="document-title">문서 제목</label>
+                <input
+                  id="document-title"
+                  type="text"
+                  data-template-field="title"
+                />
+              </div>
+
+              <div class="field">
+                <label for="document-intro">문서 소개 문구</label>
+                <textarea
+                  id="document-intro"
+                  rows="3"
+                  data-template-field="intro"
+                ></textarea>
+              </div>
+
+              <div class="field-grid two-columns">
+                <div class="field">
+                  <label for="layout-preset">레이아웃</label>
+                  <select id="layout-preset" data-template-field="layout">
+                    <option value="standard">기본형</option>
+                    <option value="compact">간결형</option>
+                    <option value="review">면접관 검토형</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="font-size">글꼴 크기</label>
+                  <select id="font-size" data-template-field="fontSize">
+                    <option value="small">작게</option>
+                    <option value="medium">보통</option>
+                    <option value="large">크게</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="preset-note" id="preset-note" aria-live="polite"></div>
+            </div>
+          </details>
+
           <details class="tool-section" open>
             <summary>
               <span class="summary-number">01</span>
@@ -148,6 +250,16 @@
                     autocomplete="tel"
                     data-field="basic.phone"
                     placeholder="010-0000-0000"
+                  />
+                </div>
+                <div class="field">
+                  <label for="student-birth-date">생년월일</label>
+                  <input
+                    id="student-birth-date"
+                    type="text"
+                    inputmode="numeric"
+                    data-field="basic.birthDate"
+                    placeholder="예: 2001.03.15"
                   />
                 </div>
                 <div class="field field-span">
@@ -351,181 +463,39 @@
               </span>
             </summary>
 
-            <div class="section-body essay-fields">
-              <div class="field">
-                <div class="label-row">
-                  <label for="essay-motivation">1. 지원 동기</label>
-                  <span id="count-motivation" class="character-count">0자</span>
-                </div>
-                <textarea
-                  id="essay-motivation"
-                  rows="7"
-                  data-field="essays.motivation"
-                ></textarea>
-                <p class="field-help">
-                  왜 이 직무를 선택했는지, 어떤 경험 때문에 이 직무에 관심을 갖게
-                  되었는지 적어 보세요.
-                </p>
-              </div>
-
-              <div class="field">
-                <div class="label-row">
-                  <label for="essay-strength">2. 직무 관련 강점</label>
-                  <span id="count-strength" class="character-count">0자</span>
-                </div>
-                <textarea
-                  id="essay-strength"
-                  rows="7"
-                  data-field="essays.strength"
-                ></textarea>
-                <p class="field-help">
-                  성격 장점보다는 실제 업무에 도움이 되는 강점을 적어 보세요.
-                </p>
-              </div>
-
-              <div class="field">
-                <div class="label-row">
-                  <label for="essay-collaboration">3. 프로젝트 또는 협업 경험</label>
-                  <span id="count-collaboration" class="character-count">0자</span>
-                </div>
-                <textarea
-                  id="essay-collaboration"
-                  rows="7"
-                  data-field="essays.collaboration"
-                ></textarea>
-                <p class="field-help">
-                  내가 맡은 역할, 실제로 한 일, 결과를 중심으로 적어 보세요.
-                </p>
-              </div>
-
-              <div class="field">
-                <div class="label-row">
-                  <label for="essay-problem">4. 문제 해결 경험</label>
-                  <span id="count-problem" class="character-count">0자</span>
-                </div>
-                <textarea
-                  id="essay-problem"
-                  rows="7"
-                  data-field="essays.problemSolving"
-                ></textarea>
-                <p class="field-help">
-                  문제 상황 → 원인 파악 → 해결 과정 → 결과 순서로 적어 보세요.
-                </p>
-              </div>
-
-              <div class="field">
-                <div class="label-row">
-                  <label for="essay-goal">5. 입사 후 목표</label>
-                  <span id="count-goal" class="character-count">0자</span>
-                </div>
-                <textarea
-                  id="essay-goal"
-                  rows="7"
-                  data-field="essays.goal"
-                ></textarea>
-                <p class="field-help">
-                  회사에서 어떤 기획자로 성장하고 싶은지 구체적으로 적어 보세요.
-                </p>
-              </div>
-            </div>
-          </details>
-
-          <details class="tool-section template-section">
-            <summary>
-              <span class="summary-number">10</span>
-              <span>
-                <strong>문서 모양 설정</strong>
-                <small>보여줄 항목과 글자 크기, 문서 제목을 직접 조절할 수 있어요.</small>
-              </span>
-            </summary>
-
             <div class="section-body">
-              <fieldset class="check-fieldset">
-                <legend>문서에 보여줄 항목</legend>
-                <div class="checkbox-grid visibility-grid">
-                  <label>
-                    <input type="checkbox" data-template-visibility="basic" />
-                    기본 정보 표시
-                  </label>
-                  <label>
-                    <input type="checkbox" data-template-visibility="education" />
-                    학력 / 교육 이력 표시
-                  </label>
-                  <label>
-                    <input type="checkbox" data-template-visibility="projects" />
-                    프로젝트 경험 표시
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      data-template-visibility="workExperiences"
-                    />
-                    인턴 / 실무 경험 표시
-                  </label>
-                  <label>
-                    <input type="checkbox" data-template-visibility="awards" />
-                    수상 / 공모전 표시
-                  </label>
-                  <label>
-                    <input type="checkbox" data-template-visibility="activities" />
-                    대외활동 / 기타 표시
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      data-template-visibility="certifications"
-                    />
-                    자격증 / 수료 표시
-                  </label>
-                  <label>
-                    <input type="checkbox" data-template-visibility="skills" />
-                    보유 역량 표시
-                  </label>
-                  <label>
-                    <input type="checkbox" data-template-visibility="essays" />
-                    자기소개서 표시
-                  </label>
-                </div>
-              </fieldset>
-
-              <div class="field">
-                <label for="document-title">문서 제목</label>
-                <input
-                  id="document-title"
-                  type="text"
-                  data-template-field="title"
-                />
-              </div>
-
-              <div class="field">
-                <label for="document-intro">문서 소개 문구</label>
-                <textarea
-                  id="document-intro"
-                  rows="3"
-                  data-template-field="intro"
-                ></textarea>
-              </div>
-
-              <div class="field-grid two-columns">
+              <div class="essay-add-panel">
                 <div class="field">
-                  <label for="layout-preset">레이아웃</label>
-                  <select id="layout-preset" data-template-field="layout">
-                    <option value="standard">기본형</option>
-                    <option value="compact">간결형</option>
-                    <option value="review">면접관 검토형</option>
+                  <label for="essay-preset">자주 쓰는 문항 선택</label>
+                  <select id="essay-preset">
+                    <option value="">문항을 선택하세요</option>
+                    <option value="지원 동기">지원 동기</option>
+                    <option value="직무 관련 강점">직무 관련 강점</option>
+                    <option value="프로젝트 또는 협업 경험">프로젝트 또는 협업 경험</option>
+                    <option value="문제 해결 경험">문제 해결 경험</option>
+                    <option value="입사 후 목표">입사 후 목표</option>
+                    <option value="성장 과정">성장 과정</option>
+                    <option value="성격의 장단점">성격의 장단점</option>
+                    <option value="지원 직무를 위해 준비한 내용">지원 직무를 위해 준비한 내용</option>
                   </select>
                 </div>
                 <div class="field">
-                  <label for="font-size">글꼴 크기</label>
-                  <select id="font-size" data-template-field="fontSize">
-                    <option value="small">작게</option>
-                    <option value="medium">보통</option>
-                    <option value="large">크게</option>
-                  </select>
+                  <label for="custom-essay-title">직접 만든 문항</label>
+                  <input
+                    id="custom-essay-title"
+                    type="text"
+                    placeholder="예: 실패를 통해 배운 경험"
+                  />
                 </div>
+                <button class="button button-add" type="button" data-action="add-essay">
+                  자기소개서 문항 추가
+                </button>
               </div>
-
-              <div class="preset-note" id="preset-note" aria-live="polite"></div>
+              <p class="field-help">
+                기본 문항의 제목도 직접 바꿀 수 있어요. 필요 없는 문항은 삭제하고,
+                지원 회사의 문항을 그대로 추가해 작성하세요.
+              </p>
+              <div id="essay-items" class="repeat-list essay-fields"></div>
             </div>
           </details>
         </form>
@@ -552,6 +522,72 @@
         </div>
       </section>
     </main>
+
+    <dialog class="guide-dialog" id="guide-dialog" aria-labelledby="guide-title">
+      <div class="guide-header">
+        <div>
+          <p class="section-kicker">처음 사용하는 분을 위한 안내</p>
+          <h2 id="guide-title">취업 서류 만들기 사용 설명서</h2>
+        </div>
+        <button class="button button-secondary" id="close-guide" type="button">
+          닫기
+        </button>
+      </div>
+
+      <div class="guide-content">
+        <section>
+          <span class="guide-step">1</span>
+          <div>
+            <h3>문서 모양을 먼저 정하세요</h3>
+            <p>
+              맨 위의 00번에서 필요한 항목만 켜고 끌 수 있어요. 지원처가 요구하지
+              않는 내용은 체크를 해제하세요.
+            </p>
+          </div>
+        </section>
+        <section>
+          <span class="guide-step">2</span>
+          <div>
+            <h3>해당하는 내용만 작성하세요</h3>
+            <p>
+              모든 칸은 선택 사항이에요. 아르바이트도 맡은 일과 배운 점을 중심으로
+              적으면 좋은 경험이 됩니다.
+            </p>
+          </div>
+        </section>
+        <section>
+          <span class="guide-step">3</span>
+          <div>
+            <h3>자기소개서 문항을 지원처에 맞추세요</h3>
+            <p>
+              기본 문항의 제목을 수정하거나 삭제할 수 있고, 회사가 제시한 문항을
+              직접 추가할 수 있어요.
+            </p>
+          </div>
+        </section>
+        <section>
+          <span class="guide-step">4</span>
+          <div>
+            <h3>오른쪽 문서를 확인하세요</h3>
+            <p>
+              작성 내용은 A4 페이지에 자동으로 나뉘어요. 빈 항목은 문서에 나오지
+              않으며, 페이지 아래에서 전체 쪽수를 확인할 수 있어요.
+            </p>
+          </div>
+        </section>
+        <section>
+          <span class="guide-step">5</span>
+          <div>
+            <h3>PDF로 저장하세요</h3>
+            <p>
+              상단의 PDF로 저장을 누르고 인쇄 창에서 대상을 ‘PDF로 저장’으로
+              선택하세요. 공용 PC에서는 사용 후 ‘처음부터 다시’를 눌러 내용을
+              지워 주세요.
+            </p>
+          </div>
+        </section>
+      </div>
+    </dialog>
 
     <noscript>
       <p class="noscript-message">
