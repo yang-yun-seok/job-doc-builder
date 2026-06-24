@@ -82,7 +82,8 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+.project-thumbnail-link:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
   outline-offset: 2px;
 }
@@ -590,6 +591,51 @@ summary:focus-visible {
   line-height: 1.55;
 }
 
+.project-image-field {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1.3fr);
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #dfe3e7;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.project-image-input-preview {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #cbd1d7;
+  color: #8a929b;
+  background: #f0f2f4;
+  font-size: 0.7rem;
+}
+
+.project-image-input-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-image-upload-copy > strong {
+  display: block;
+  font-size: 0.8rem;
+}
+
+.project-image-upload-copy > p {
+  margin: 5px 0 0;
+  color: #68717b;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.project-image-status[data-state="error"] {
+  color: var(--danger);
+}
+
 .photo-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1063,6 +1109,51 @@ summary:focus-visible {
   border-bottom: 1px solid #cfd3d7;
 }
 
+.project-entry.has-thumbnail {
+  display: grid;
+  grid-template-columns: 43mm minmax(0, 1fr);
+  column-gap: 5mm;
+  align-items: start;
+}
+
+.project-entry.has-thumbnail > :not(.project-thumbnail) {
+  grid-column: 2;
+}
+
+.project-thumbnail {
+  grid-row: 1 / span 20;
+  grid-column: 1;
+  width: 100%;
+  margin: 0;
+}
+
+.project-thumbnail-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.project-thumbnail img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #bfc5cb;
+  background: #f1f2f3;
+  object-fit: cover;
+}
+
+.project-thumbnail-link:hover img {
+  border-color: #565e68;
+}
+
+.project-thumbnail figcaption {
+  margin-top: 4px;
+  color: #737b84;
+  font-size: 0.66em;
+  line-height: 1.42;
+  text-align: center;
+}
+
 .resume-entry {
   padding-bottom: 16px;
   border-bottom: 1px solid #cfd3d7;
@@ -1101,6 +1192,25 @@ summary:focus-visible {
 
 .project-meta strong {
   color: #262a30;
+}
+
+.project-launch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 9px 0 0;
+  color: #4e5660;
+  font-size: 0.82em;
+}
+
+.project-launch strong {
+  color: #262a30;
+}
+
+.project-launch a {
+  color: #24282d;
+  font-weight: 720;
+  text-underline-offset: 2px;
 }
 
 .project-summary {
@@ -1259,6 +1369,11 @@ summary:focus-visible {
   line-height: 1.68;
 }
 
+.layout-compact .project-entry.has-thumbnail {
+  grid-template-columns: 36mm minmax(0, 1fr);
+  column-gap: 4mm;
+}
+
 /* 면접관 검토형 */
 
 .document-sheet.layout-review {
@@ -1305,6 +1420,115 @@ summary:focus-visible {
 .layout-review .essay-question {
   padding-bottom: 6px;
   border-bottom: 1px solid #aeb4bb;
+}
+
+/* 타임라인형 */
+
+.document-sheet.layout-timeline {
+  --section-gap: 27px;
+  --entry-gap: 18px;
+}
+
+.layout-timeline .document-topline {
+  border-bottom-width: 1px;
+}
+
+.layout-timeline .document-section-title {
+  border-bottom: 1px solid #8f969e;
+}
+
+.layout-timeline .education-list,
+.layout-timeline .resume-entry-list,
+.layout-timeline .project-list,
+.layout-timeline .credential-list {
+  position: relative;
+  padding-left: 18px;
+}
+
+.layout-timeline .education-list::before,
+.layout-timeline .resume-entry-list::before,
+.layout-timeline .project-list::before,
+.layout-timeline .credential-list::before {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 3px;
+  width: 1px;
+  background: #aeb4bb;
+  content: "";
+}
+
+.layout-timeline .education-entry,
+.layout-timeline .resume-entry,
+.layout-timeline .project-entry,
+.layout-timeline .credential-entry {
+  position: relative;
+  border-bottom-color: #d8dce0;
+}
+
+.layout-timeline .education-entry::before,
+.layout-timeline .resume-entry::before,
+.layout-timeline .project-entry::before,
+.layout-timeline .credential-entry::before {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  left: -18px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #343a40;
+  box-shadow: 0 0 0 1px #747c85;
+  content: "";
+}
+
+.layout-timeline .entry-period {
+  color: #23282e;
+}
+
+/* 프로젝트 강조형 */
+
+.document-sheet.layout-portfolio {
+  --section-gap: 29px;
+  --entry-gap: 22px;
+}
+
+.layout-portfolio .document-topline {
+  padding-bottom: 16px;
+  border-bottom-width: 4px;
+}
+
+.layout-portfolio .project-document-section .document-section-title {
+  margin-bottom: 18px;
+  font-size: 1.42em;
+}
+
+.layout-portfolio .project-entry {
+  padding: 0 0 20px;
+  border-bottom: 2px solid #9fa6ae;
+}
+
+.layout-portfolio .project-entry.has-thumbnail {
+  grid-template-columns: 55mm minmax(0, 1fr);
+  column-gap: 6mm;
+}
+
+.layout-portfolio .project-heading .entry-title {
+  font-size: 1.16em;
+}
+
+.layout-portfolio .project-summary {
+  grid-template-columns: 38px 1fr;
+  color: #3f464e;
+}
+
+.layout-portfolio .contribution-label {
+  font-size: 0.84em;
+}
+
+.layout-portfolio .contribution-list {
+  gap: 5px;
 }
 
 /* =========================
@@ -1370,6 +1594,10 @@ summary:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .project-image-field {
+    grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.2fr);
+  }
+
 }
 
 @media (max-width: 460px) {
@@ -1392,6 +1620,14 @@ summary:focus-visible {
 
   .photo-input-preview {
     width: 68px;
+  }
+
+  .project-image-field {
+    grid-template-columns: 1fr;
+  }
+
+  .project-image-input-preview {
+    max-width: 260px;
   }
 
   .panel-heading,
@@ -1475,7 +1711,9 @@ summary:focus-visible {
 
   .document-sheet,
   .document-sheet.layout-compact,
-  .document-sheet.layout-review {
+  .document-sheet.layout-review,
+  .document-sheet.layout-timeline,
+  .document-sheet.layout-portfolio {
     width: 210mm;
     height: 297mm;
     min-height: 297mm;
@@ -1500,6 +1738,7 @@ summary:focus-visible {
   .identity-block,
   .education-entry,
   .project-entry,
+  .project-thumbnail,
   .resume-entry,
   .credential-entry,
   .skill-detail-entry,

@@ -34,6 +34,8 @@
     standard: "기본형: 대부분의 지원처에 무난하게 제출할 수 있는 구성입니다.",
     compact: "간결형: 작성 내용이 많을 때 여백을 줄여 더 촘촘하게 보여줍니다.",
     review: "면접관 검토형: 역할과 주요 기여가 빠르게 보이도록 강조합니다.",
+    timeline: "타임라인형: 학력과 경험의 기간·흐름을 시간 순서로 빠르게 읽을 수 있습니다.",
+    portfolio: "프로젝트 강조형: 프로젝트 썸네일과 결과물을 더 크게 보여주는 구성입니다.",
   };
 
   const dom = {
@@ -113,6 +115,8 @@
       role: "",
       tools: "",
       summary: "",
+      image: "",
+      releaseLink: "",
       contributions: ["", "", ""],
     };
   }
@@ -274,6 +278,8 @@
           tools: "Excel, Figma, Notion",
           summary:
             "캐릭터 성장과 장비 강화의 반복 플레이 흐름을 설계한 교육 과정 팀 프로젝트",
+          image: "",
+          releaseLink: "https://example.com/rpg-system-project",
           contributions: [
             "캐릭터 레벨업, 승급, 장비 강화 규칙과 해금 조건을 문서화했습니다.",
             "성장 재화의 획득·소비 구조를 표로 정리하고 구간별 요구량을 계산했습니다.",
@@ -288,6 +294,8 @@
           tools: "Figma, Notion, Google Sheets",
           summary:
             "초반 이탈을 줄이기 위해 튜토리얼 순서와 협동 규칙 안내 방식을 개선한 프로젝트",
+          image: "",
+          releaseLink: "",
           contributions: [
             "기존 튜토리얼을 단계별로 분석해 정보가 한 번에 몰리는 구간을 찾았습니다.",
             "행동 실습 후 설명이 노출되는 방식으로 튜토리얼 플로우를 재구성했습니다.",
@@ -427,6 +435,11 @@
   function handleFormChange(event) {
     const target = event.target;
 
+    if (target.matches("[data-project-image]")) {
+      handleProjectImageUpload(target);
+      return;
+    }
+
     if (target.matches("[data-field]")) {
       setPath(state.student, target.dataset.field, target.value);
     } else if (target.matches("[data-template-field]")) {
@@ -509,6 +522,17 @@
       removeRepeatItem("projects", button.dataset.itemId);
     }
 
+    if (action === "remove-project-image") {
+      const project = state.student.projects.find(
+        (item) => item.id === button.dataset.itemId,
+      );
+      if (project) {
+        project.image = "";
+        renderProjectImageInputPreview(project.id);
+        setProjectImageStatus(project.id, "프로젝트 이미지가 삭제됐어요.");
+      }
+    }
+
     if (action === "remove-award") {
       removeRepeatItem("awards", button.dataset.itemId);
     }
@@ -582,6 +606,14 @@
   }
 
   function resizePhoto(source) {
+    return resizeImageToRatio(source, 360, 480, 0.84);
+  }
+
+  function resizeProjectImage(source) {
+    return resizeImageToRatio(source, 640, 360, 0.8);
+  }
+
+  function resizeImageToRatio(source, outputWidth, outputHeight, quality) {
     return new Promise((resolve, reject) => {
       const image = new Image();
 
@@ -593,8 +625,6 @@
           return;
         }
 
-        const outputWidth = 360;
-        const outputHeight = 480;
         const targetRatio = outputWidth / outputHeight;
         const sourceRatio = image.naturalWidth / image.naturalHeight;
         let sourceWidth = image.naturalWidth;
@@ -626,12 +656,59 @@
           outputHeight,
         );
 
-        resolve(canvas.toDataURL("image/jpeg", 0.84));
+        resolve(canvas.toDataURL("image/jpeg", quality));
       };
 
       image.onerror = () => reject(new Error("이미지 디코딩 실패"));
       image.src = source;
     });
+  }
+
+  async function handleProjectImageUpload(input) {
+    const project = state.student.projects.find(
+      (item) => item.id === input.dataset.itemId,
+    );
+    const file = input.files?.[0];
+    if (!project || !file) return;
+
+    if (!file.type.startsWith("image/")) {
+      input.value = "";
+      setProjectImageStatus(
+        project.id,
+        "JPG, PNG, WEBP 이미지 파일을 선택해 주세요.",
+        true,
+      );
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      input.value = "";
+      setProjectImageStatus(
+        project.id,
+        "이미지는 8MB 이하 파일로 선택해 주세요.",
+        true,
+      );
+      return;
+    }
+
+    setProjectImageStatus(project.id, "썸네일을 16:9 비율로 정리하고 있어요.");
+
+    try {
+      const source = await readFileAsDataUrl(file);
+      project.image = await resizeProjectImage(source);
+      renderProjectImageInputPreview(project.id);
+      renderPreview();
+      scheduleSave();
+      setProjectImageStatus(project.id, "프로젝트 이미지를 저장했어요.");
+    } catch (error) {
+      console.warn("프로젝트 이미지를 처리하지 못했습니다.", error);
+      input.value = "";
+      setProjectImageStatus(
+        project.id,
+        "이미지를 불러오지 못했어요. 다른 파일을 선택해 주세요.",
+        true,
+      );
+    }
   }
 
   function renderPhotoInputPreview() {
@@ -656,6 +733,48 @@
   function setPhotoStatus(message, isError = false) {
     dom.photoStatus.textContent = message;
     dom.photoStatus.dataset.state = isError ? "error" : "normal";
+  }
+
+  function renderProjectImageInputPreview(itemId) {
+    const project = state.student.projects.find((item) => item.id === itemId);
+    const preview = dom.projectItems.querySelector(
+      `[data-project-image-preview="${itemId}"]`,
+    );
+    const removeButton = dom.projectItems.querySelector(
+      `[data-action="remove-project-image"][data-item-id="${itemId}"]`,
+    );
+    const uploadLabel = dom.projectItems.querySelector(
+      `[data-project-image-label="${itemId}"]`,
+    );
+    if (!project || !preview) return;
+
+    const imageSource = sanitizeProjectImage(project.image);
+    preview.replaceChildren();
+
+    if (imageSource) {
+      const image = document.createElement("img");
+      image.src = imageSource;
+      image.alt = "업로드한 프로젝트 썸네일 미리보기";
+      preview.append(image);
+    } else {
+      const emptyText = document.createElement("span");
+      emptyText.textContent = "이미지 없음";
+      preview.append(emptyText);
+    }
+
+    if (removeButton) removeButton.disabled = !imageSource;
+    if (uploadLabel) {
+      uploadLabel.textContent = imageSource ? "이미지 변경" : "이미지 선택";
+    }
+  }
+
+  function setProjectImageStatus(itemId, message, isError = false) {
+    const status = dom.projectItems.querySelector(
+      `[data-project-image-status="${itemId}"]`,
+    );
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.state = isError ? "error" : "normal";
   }
 
   function focusLatestItem(container) {
@@ -921,6 +1040,15 @@
     );
     const grid = createElement("div", "field-grid two-columns");
 
+    const releaseLinkField = createRepeatField(
+      "출시 / 시연 링크 (선택)",
+      item,
+      "projects",
+      "releaseLink",
+      "예: https://store.example.com/my-game",
+    );
+    releaseLinkField.querySelector("input").type = "url";
+
     grid.append(
       createRepeatField("프로젝트명", item, "projects", "name", "프로젝트명"),
       createRepeatField(
@@ -947,6 +1075,8 @@
         true,
         true,
       ),
+      releaseLinkField,
+      createProjectImageField(item),
     );
 
     const contributionGroup = createElement("div", "contribution-grid field-span");
@@ -965,6 +1095,66 @@
 
     grid.append(contributionGroup);
     wrapper.append(header, grid);
+    return wrapper;
+  }
+
+  function createProjectImageField(item) {
+    const wrapper = createElement("div", "field field-span project-image-field");
+    const uploadId = `project-image-${item.id}`;
+    const preview = createElement("div", "project-image-input-preview");
+    const copy = createElement("div", "project-image-upload-copy");
+    const title = document.createElement("strong");
+    const description = document.createElement("p");
+    const actions = createElement("div", "photo-actions");
+    const uploadLabel = createElement(
+      "label",
+      "button button-secondary photo-upload-button",
+    );
+    const input = document.createElement("input");
+    const removeButton = createElement("button", "button button-delete");
+    const status = createElement("p", "field-help project-image-status");
+    const imageSource = sanitizeProjectImage(item.image);
+
+    preview.dataset.projectImagePreview = item.id;
+    if (imageSource) {
+      const image = document.createElement("img");
+      image.src = imageSource;
+      image.alt = "업로드한 프로젝트 썸네일 미리보기";
+      preview.append(image);
+    } else {
+      const emptyText = document.createElement("span");
+      emptyText.textContent = "이미지 없음";
+      preview.append(emptyText);
+    }
+
+    title.textContent = "프로젝트 썸네일 (선택)";
+    description.textContent =
+      "대표 화면, 게임 플레이, 기획서 표지처럼 프로젝트를 빠르게 이해할 수 있는 이미지를 넣어 보세요.";
+
+    uploadLabel.htmlFor = uploadId;
+    uploadLabel.textContent = imageSource ? "이미지 변경" : "이미지 선택";
+    uploadLabel.dataset.projectImageLabel = item.id;
+
+    input.id = uploadId;
+    input.className = "visually-hidden";
+    input.type = "file";
+    input.accept = "image/png,image/jpeg,image/webp";
+    input.dataset.projectImage = "";
+    input.dataset.itemId = item.id;
+
+    removeButton.type = "button";
+    removeButton.dataset.action = "remove-project-image";
+    removeButton.dataset.itemId = item.id;
+    removeButton.textContent = "이미지 삭제";
+    removeButton.disabled = !imageSource;
+
+    status.dataset.projectImageStatus = item.id;
+    status.textContent =
+      "JPG, PNG, WEBP / 8MB 이하 권장 · 문서에서는 16:9 비율로 표시돼요.";
+
+    actions.append(uploadLabel, input, removeButton);
+    copy.append(title, description, actions, status);
+    wrapper.append(preview, copy);
     return wrapper;
   }
 
@@ -1969,12 +2159,46 @@
 
   function createProjectSection(items, sectionNumber) {
     const section = createDocumentSection(sectionNumber, "프로젝트 경험");
+    section.classList.add("project-document-section");
     const list = createElement("div", "project-list");
 
     items.forEach((item) => {
       const entry = createElement("article", "project-entry");
       const heading = createElement("div", "project-heading");
       const projectName = clean(item.name);
+      const projectImage = sanitizeProjectImage(item.image);
+      const releaseLink = normalizeUrl(item.releaseLink);
+
+      if (projectImage) {
+        entry.classList.add("has-thumbnail");
+        const figure = createElement("figure", "project-thumbnail");
+        const image = document.createElement("img");
+        image.src = projectImage;
+        image.alt = projectName
+          ? `${projectName} 프로젝트 썸네일`
+          : "프로젝트 썸네일";
+
+        if (releaseLink) {
+          const anchor = createElement("a", "project-thumbnail-link");
+          anchor.href = releaseLink;
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          anchor.setAttribute(
+            "aria-label",
+            `${projectName || "프로젝트"} 출시 페이지로 이동`,
+          );
+          anchor.append(image);
+          figure.append(anchor);
+
+          const caption = document.createElement("figcaption");
+          caption.textContent = "클릭하면 출시 페이지로 이동합니다.";
+          figure.append(caption);
+        } else {
+          figure.append(image);
+        }
+
+        entry.append(figure);
+      }
 
       if (projectName) {
         const title = createElement("h3", "entry-title");
@@ -2033,6 +2257,26 @@
         label.textContent = "사용 툴";
         meta.append(label, document.createTextNode(tools));
         entry.append(meta);
+      }
+
+      if (!projectImage && clean(item.releaseLink)) {
+        const launch = createElement("p", "project-launch");
+        const label = document.createElement("strong");
+        label.textContent = "출시 링크";
+        launch.append(label);
+
+        if (releaseLink) {
+          const anchor = document.createElement("a");
+          anchor.href = releaseLink;
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          anchor.textContent = "출시 페이지 보기";
+          launch.append(anchor);
+        } else {
+          launch.append(document.createTextNode(clean(item.releaseLink)));
+        }
+
+        entry.append(launch);
       }
 
       list.append(entry);
@@ -2239,7 +2483,15 @@
 
   function nonEmptyProjects() {
     return state.student.projects.filter((item) => {
-      const fields = ["name", "period", "role", "tools", "summary"];
+      const fields = [
+        "name",
+        "period",
+        "role",
+        "tools",
+        "summary",
+        "image",
+        "releaseLink",
+      ];
       return (
         fields.some((key) => Boolean(clean(item[key]))) ||
         item.contributions.some((value) => Boolean(clean(value)))
@@ -2443,6 +2695,8 @@
       role: coerceText(item.role),
       tools: coerceText(item.tools),
       summary: coerceText(item.summary),
+      image: sanitizeProjectImage(item.image),
+      releaseLink: coerceText(item.releaseLink),
       contributions,
     };
   }
@@ -2563,7 +2817,13 @@
   function sanitizeTemplate(source, fallback) {
     if (!source || typeof source !== "object") return fallback;
 
-    const validLayouts = ["standard", "compact", "review"];
+    const validLayouts = [
+      "standard",
+      "compact",
+      "review",
+      "timeline",
+      "portfolio",
+    ];
     const validFontSizes = ["small", "medium", "large"];
     const previousDefaultIntro =
       "아래 문서는 입력된 내용을 바탕으로 제출용 가독성을 갖추어 정리한 취업 문서입니다.";
@@ -2627,6 +2887,10 @@
   function sanitizePhoto(value) {
     const text = coerceText(value);
     return /^data:image\/(?:jpeg|png|webp);base64,/i.test(text) ? text : "";
+  }
+
+  function sanitizeProjectImage(value) {
+    return sanitizePhoto(value);
   }
 
   function scheduleSave() {
