@@ -1248,6 +1248,31 @@ summary:focus-visible,
   font-size: 0.86em;
 }
 
+.project-retrospective {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px dashed #c8cdd2;
+  color: #555d66;
+  font-size: 0.84em;
+  line-height: 1.65;
+}
+
+.project-retrospective strong,
+.project-retrospective p {
+  margin: 0;
+}
+
+.project-retrospective strong {
+  color: #262a30;
+}
+
+.project-retrospective p {
+  white-space: pre-wrap;
+}
+
 .credential-entry {
   display: grid;
   grid-template-columns: minmax(92px, 0.25fr) minmax(0, 1fr);
@@ -1521,6 +1546,10 @@ summary:focus-visible,
 .layout-portfolio .project-summary {
   grid-template-columns: 38px 1fr;
   color: #3f464e;
+}
+
+.layout-portfolio .project-retrospective {
+  grid-template-columns: 38px minmax(0, 1fr);
 }
 
 .layout-portfolio .contribution-label {

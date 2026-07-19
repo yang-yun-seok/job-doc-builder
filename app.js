@@ -115,6 +115,7 @@
       role: "",
       tools: "",
       summary: "",
+      retrospective: "",
       image: "",
       releaseLink: "",
       contributions: ["", "", ""],
@@ -278,6 +279,8 @@
           tools: "Excel, Figma, Notion",
           summary:
             "캐릭터 성장과 장비 강화의 반복 플레이 흐름을 설계한 교육 과정 팀 프로젝트",
+          retrospective:
+            "처음에는 기능 범위를 넓게 잡아 문서 수정이 잦았습니다. 이후 핵심 성장 경험과 우선순위를 먼저 합의하면서 기획 범위를 정하는 과정이 중요하다는 점을 배웠습니다.",
           image: "",
           releaseLink: "https://example.com/rpg-system-project",
           contributions: [
@@ -294,6 +297,8 @@
           tools: "Figma, Notion, Google Sheets",
           summary:
             "초반 이탈을 줄이기 위해 튜토리얼 순서와 협동 규칙 안내 방식을 개선한 프로젝트",
+          retrospective:
+            "적은 인원의 테스트만으로 결론을 내린 점은 아쉬웠습니다. 다음에는 테스트 질문과 관찰 기준을 먼저 정하고, 플레이 행동과 의견을 구분해 기록하겠습니다.",
           image: "",
           releaseLink: "",
           contributions: [
@@ -1093,7 +1098,18 @@
       );
     });
 
-    grid.append(contributionGroup);
+    grid.append(
+      contributionGroup,
+      createRepeatField(
+        "회고 (선택)",
+        item,
+        "projects",
+        "retrospective",
+        "잘된 점, 아쉬웠던 점, 다음에 개선할 점을 짧게 정리해 보세요.",
+        true,
+        true,
+      ),
+    );
     wrapper.append(header, grid);
     return wrapper;
   }
@@ -2251,6 +2267,17 @@
         entry.append(block);
       }
 
+      const retrospective = clean(item.retrospective);
+      if (retrospective) {
+        const reflection = createElement("div", "project-retrospective");
+        const label = document.createElement("strong");
+        const content = document.createElement("p");
+        label.textContent = "회고";
+        content.textContent = retrospective;
+        reflection.append(label, content);
+        entry.append(reflection);
+      }
+
       if (tools) {
         const meta = createElement("p", "project-meta");
         const label = document.createElement("strong");
@@ -2489,6 +2516,7 @@
         "role",
         "tools",
         "summary",
+        "retrospective",
         "image",
         "releaseLink",
       ];
@@ -2695,6 +2723,7 @@
       role: coerceText(item.role),
       tools: coerceText(item.tools),
       summary: coerceText(item.summary),
+      retrospective: coerceText(item.retrospective),
       image: sanitizeProjectImage(item.image),
       releaseLink: coerceText(item.releaseLink),
       contributions,
