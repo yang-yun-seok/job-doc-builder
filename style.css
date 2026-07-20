@@ -171,6 +171,17 @@ summary:focus-visible,
   background: #0f172a;
 }
 
+.button-output {
+  border-color: #59636f;
+  color: #1f2933;
+  background: #f8fafc;
+}
+
+.button-output:hover {
+  border-color: #1f2933;
+  background: #eef1f4;
+}
+
 .button-secondary {
   border-color: var(--line);
   color: #29313a;
@@ -760,6 +771,139 @@ summary:focus-visible,
   line-height: 1.55;
 }
 
+.manual-layout-panel {
+  display: grid;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid #dfe3e7;
+}
+
+.manual-layout-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.manual-layout-heading h3,
+.manual-layout-heading p {
+  margin: 0;
+}
+
+.manual-layout-heading h3 {
+  font-size: 0.96rem;
+  letter-spacing: -0.025em;
+}
+
+.manual-layout-heading > p {
+  max-width: 260px;
+  color: #68717b;
+  font-size: 0.71rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.manual-layout-options {
+  padding: 14px;
+  border-left: 3px solid #8792a2;
+  background: #f7f8fa;
+}
+
+.section-order-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.section-order-editor > div > strong {
+  color: #343b44;
+  font-size: 0.78rem;
+}
+
+.section-order-editor > div > p {
+  margin: 3px 0 0;
+  color: #747d87;
+  font-size: 0.7rem;
+}
+
+.section-order-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.section-order-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px 7px 6px 11px;
+  border-bottom: 1px solid #dfe3e7;
+  background: #fff;
+}
+
+.section-order-item.is-hidden-section {
+  color: #858d96;
+  background: #f8f9fa;
+}
+
+.section-order-position {
+  color: #8a929b;
+  font-size: 0.67rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-order-label {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.section-order-hidden {
+  color: #9299a1;
+  font-size: 0.62rem;
+  font-weight: 500;
+}
+
+.section-order-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.section-order-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #d3d7dc;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.section-order-button:hover:not(:disabled) {
+  border-color: #87919c;
+  background: #f2f4f6;
+}
+
+.export-status {
+  min-height: 1.1em;
+  margin: 5px 0 0;
+  color: #59636f;
+  font-size: 0.7rem;
+}
+
+.export-status[data-state="error"] {
+  color: var(--danger);
+}
+
 /* =========================
    A4 미리보기
    ========================= */
@@ -1166,13 +1310,20 @@ summary:focus-visible,
 
 .project-heading {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
 }
 
+.project-heading .entry-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .project-heading .entry-period {
   flex: 0 0 auto;
+  margin-top: 0.14em;
+  white-space: nowrap;
 }
 
 .project-heading .entry-period::before {
@@ -1560,11 +1711,85 @@ summary:focus-visible,
   gap: 5px;
 }
 
+/* 직접 편집 설정 */
+
+.document-sheet.manual-margin-narrow {
+  padding: 13mm 14mm 10mm;
+}
+
+.document-sheet.manual-margin-normal {
+  padding: 17mm 17mm 12mm;
+}
+
+.document-sheet.manual-margin-wide {
+  padding: 21mm 21mm 15mm;
+}
+
+.document-sheet.manual-spacing-tight {
+  --section-gap: 19px;
+  --entry-gap: 11px;
+}
+
+.document-sheet.manual-spacing-normal {
+  --section-gap: 27px;
+  --entry-gap: 17px;
+}
+
+.document-sheet.manual-spacing-relaxed {
+  --section-gap: 36px;
+  --entry-gap: 23px;
+}
+
+.document-sheet.manual-heading-line .document-section-title {
+  padding: 0 0 7px;
+  border: 0;
+  border-bottom: 1px solid #5f666e;
+}
+
+.document-sheet.manual-heading-numbered .document-section-title {
+  padding: 0 0 8px;
+  border: 0;
+  border-bottom: 1px solid #a8aeb5;
+}
+
+.document-sheet.manual-heading-numbered .section-index {
+  display: inline-grid;
+  min-width: 27px;
+  min-height: 22px;
+  place-items: center;
+  padding: 2px 5px;
+  color: #fff;
+  background: #24282d;
+  letter-spacing: 0.04em;
+}
+
+.document-sheet.manual-heading-minimal .document-section-title {
+  padding: 0;
+  border: 0;
+}
+
+.document-sheet.manual-heading-minimal .section-index {
+  color: #a0a6ad;
+}
+
+.document-sheet.manual-title-center .document-topline {
+  justify-content: center;
+  text-align: center;
+}
+
+.document-sheet.manual-title-center .document-intro {
+  margin-inline: auto;
+}
+
 /* =========================
    반응형
    ========================= */
 
 @media (max-width: 1240px) {
+  :root {
+    --header-height: 108px;
+  }
+
   .workspace {
     grid-template-columns: minmax(380px, 470px) minmax(560px, 1fr);
     padding-inline: 22px;
@@ -1621,6 +1846,16 @@ summary:focus-visible,
   .visibility-grid,
   .essay-add-panel {
     grid-template-columns: 1fr;
+  }
+
+  .manual-layout-heading {
+    display: grid;
+    align-items: start;
+  }
+
+  .manual-layout-heading > p {
+    max-width: none;
+    text-align: left;
   }
 
   .project-image-field {

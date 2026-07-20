@@ -38,6 +38,18 @@
     portfolio: "프로젝트 강조형: 프로젝트 썸네일과 결과물을 더 크게 보여주는 구성입니다.",
   };
 
+  const SECTION_DEFINITIONS = [
+    { key: "basic", label: "기본 정보" },
+    { key: "education", label: "학력 / 교육 이력" },
+    { key: "workExperiences", label: "인턴 / 실무 경험" },
+    { key: "projects", label: "프로젝트 경험" },
+    { key: "awards", label: "수상 / 공모전" },
+    { key: "activities", label: "대외활동 / 기타" },
+    { key: "certifications", label: "자격증 / 수료" },
+    { key: "skills", label: "보유 역량" },
+    { key: "essays", label: "자기소개서" },
+  ];
+
   const dom = {
     form: document.querySelector("#document-form"),
     educationItems: document.querySelector("#education-items"),
@@ -60,6 +72,7 @@
     progressText: document.querySelector("#progress-text"),
     completionProgress: document.querySelector("#completion-progress"),
     presetNote: document.querySelector("#preset-note"),
+    sectionOrderList: document.querySelector("#section-order-list"),
     refreshButton: document.querySelector("#refresh-preview"),
     resetButton: document.querySelector("#reset-data"),
     sampleButton: document.querySelector("#load-sample"),
@@ -219,6 +232,11 @@
         "작성한 내용을 바탕으로 정리한 이력서 및 자기소개서입니다.",
       layout: "standard",
       fontSize: "medium",
+      pageMargin: "preset",
+      sectionSpacing: "preset",
+      headingStyle: "preset",
+      titleAlign: "left",
+      sectionOrder: SECTION_DEFINITIONS.map((section) => section.key),
     };
   }
 
@@ -452,6 +470,7 @@
       updatePresetNote();
     } else if (target.matches("[data-template-visibility]")) {
       state.template.visibility[target.dataset.templateVisibility] = target.checked;
+      renderSectionOrderControls();
     } else if (target.matches("[data-item-field]")) {
       updateRepeatItem(target);
     } else {
@@ -563,6 +582,14 @@
       dom.photoInput.value = "";
       renderPhotoInputPreview();
       setPhotoStatus("사진을 삭제했어요.");
+    }
+
+    if (action === "move-section-up") {
+      moveTemplateSection(button.dataset.sectionKey, -1);
+    }
+
+    if (action === "move-section-down") {
+      moveTemplateSection(button.dataset.sectionKey, 1);
     }
 
     renderPreview();
@@ -1545,11 +1572,78 @@
       });
 
     renderPhotoInputPreview();
+    renderSectionOrderControls();
+  }
+
+  function renderSectionOrderControls() {
+    if (!dom.sectionOrderList) return;
+
+    const order = state.template.sectionOrder;
+    dom.sectionOrderList.replaceChildren(
+      ...order.map((key, index) => {
+        const definition = SECTION_DEFINITIONS.find((section) => section.key === key);
+        const item = createElement("li", "section-order-item");
+        const label = createElement("span", "section-order-label");
+        const position = createElement("span", "section-order-position");
+        const actions = createElement("span", "section-order-actions");
+        const upButton = createElement("button", "section-order-button");
+        const downButton = createElement("button", "section-order-button");
+        const isVisible = state.template.visibility[key];
+
+        position.textContent = String(index + 1).padStart(2, "0");
+        label.textContent = definition?.label || key;
+        if (!isVisible) {
+          item.classList.add("is-hidden-section");
+          const hiddenLabel = createElement("small", "section-order-hidden");
+          hiddenLabel.textContent = "문서에서 숨김";
+          label.append(hiddenLabel);
+        }
+
+        upButton.type = "button";
+        upButton.dataset.action = "move-section-up";
+        upButton.dataset.sectionKey = key;
+        upButton.textContent = "↑";
+        upButton.disabled = index === 0;
+        upButton.setAttribute("aria-label", `${label.firstChild.textContent} 위로 이동`);
+
+        downButton.type = "button";
+        downButton.dataset.action = "move-section-down";
+        downButton.dataset.sectionKey = key;
+        downButton.textContent = "↓";
+        downButton.disabled = index === order.length - 1;
+        downButton.setAttribute("aria-label", `${label.firstChild.textContent} 아래로 이동`);
+
+        actions.append(upButton, downButton);
+        item.append(position, label, actions);
+        return item;
+      }),
+    );
+  }
+
+  function moveTemplateSection(sectionKey, direction) {
+    const order = state.template.sectionOrder;
+    const currentIndex = order.indexOf(sectionKey);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= order.length) return;
+
+    [order[currentIndex], order[nextIndex]] = [order[nextIndex], order[currentIndex]];
+    renderSectionOrderControls();
+  }
+
+  function documentTemplateClasses() {
+    return [
+      `layout-${state.template.layout}`,
+      `font-${state.template.fontSize}`,
+      `manual-margin-${state.template.pageMargin}`,
+      `manual-spacing-${state.template.sectionSpacing}`,
+      `manual-heading-${state.template.headingStyle}`,
+      `manual-title-${state.template.titleAlign}`,
+    ].join(" ");
   }
 
   function renderPreview() {
     const preview = dom.preview;
-    preview.className = `preview-pages layout-${state.template.layout} font-${state.template.fontSize}`;
+    preview.className = `preview-pages ${documentTemplateClasses()}`;
     preview.style.zoom = "1";
     preview.replaceChildren();
 
@@ -1559,17 +1653,7 @@
     let sectionNumber = 1;
     const nextSectionNumber = () => String(sectionNumber++).padStart(2, "0");
 
-    if (state.template.visibility.basic && hasBasicContent()) {
-      flowNodes.push(createIdentityBlock());
-      visibleContentCount += 1;
-    }
-
     const education = nonEmptyEducation();
-    if (state.template.visibility.education && education.length > 0) {
-      flowNodes.push(createEducationSection(education, nextSectionNumber()));
-      visibleContentCount += 1;
-    }
-
     const workExperiences = nonEmptyItems("workExperiences", [
       "organization",
       "type",
@@ -1578,22 +1662,7 @@
       "details",
       "achievements",
     ]);
-    if (
-      state.template.visibility.workExperiences &&
-      workExperiences.length > 0
-    ) {
-      flowNodes.push(
-        createWorkExperienceSection(workExperiences, nextSectionNumber()),
-      );
-      visibleContentCount += 1;
-    }
-
     const projects = nonEmptyProjects();
-    if (state.template.visibility.projects && projects.length > 0) {
-      flowNodes.push(createProjectSection(projects, nextSectionNumber()));
-      visibleContentCount += 1;
-    }
-
     const awards = nonEmptyItems("awards", [
       "name",
       "organizer",
@@ -1602,11 +1671,6 @@
       "role",
       "details",
     ]);
-    if (state.template.visibility.awards && awards.length > 0) {
-      flowNodes.push(createAwardSection(awards, nextSectionNumber()));
-      visibleContentCount += 1;
-    }
-
     const activities = nonEmptyItems("activities", [
       "name",
       "organization",
@@ -1615,11 +1679,6 @@
       "role",
       "details",
     ]);
-    if (state.template.visibility.activities && activities.length > 0) {
-      flowNodes.push(createActivitySection(activities, nextSectionNumber()));
-      visibleContentCount += 1;
-    }
-
     const certifications = nonEmptyItems("certifications", [
       "name",
       "issuer",
@@ -1627,27 +1686,56 @@
       "credential",
       "details",
     ]);
-    if (
-      state.template.visibility.certifications &&
-      certifications.length > 0
-    ) {
-      flowNodes.push(
-        createCertificationSection(certifications, nextSectionNumber()),
-      );
-      visibleContentCount += 1;
-    }
-
     const skills = nonEmptySkills();
-    if (state.template.visibility.skills && skills.length > 0) {
-      flowNodes.push(createSkillsSection(skills, nextSectionNumber()));
-      visibleContentCount += 1;
-    }
-
     const essays = nonEmptyEssays();
-    if (state.template.visibility.essays && essays.length > 0) {
-      flowNodes.push(createEssaySection(essays, nextSectionNumber()));
+
+    const sections = {
+      basic: {
+        hasContent: hasBasicContent(),
+        create: () => createIdentityBlock(),
+      },
+      education: {
+        hasContent: education.length > 0,
+        create: () => createEducationSection(education, nextSectionNumber()),
+      },
+      workExperiences: {
+        hasContent: workExperiences.length > 0,
+        create: () =>
+          createWorkExperienceSection(workExperiences, nextSectionNumber()),
+      },
+      projects: {
+        hasContent: projects.length > 0,
+        create: () => createProjectSection(projects, nextSectionNumber()),
+      },
+      awards: {
+        hasContent: awards.length > 0,
+        create: () => createAwardSection(awards, nextSectionNumber()),
+      },
+      activities: {
+        hasContent: activities.length > 0,
+        create: () => createActivitySection(activities, nextSectionNumber()),
+      },
+      certifications: {
+        hasContent: certifications.length > 0,
+        create: () =>
+          createCertificationSection(certifications, nextSectionNumber()),
+      },
+      skills: {
+        hasContent: skills.length > 0,
+        create: () => createSkillsSection(skills, nextSectionNumber()),
+      },
+      essays: {
+        hasContent: essays.length > 0,
+        create: () => createEssaySection(essays, nextSectionNumber()),
+      },
+    };
+
+    state.template.sectionOrder.forEach((key) => {
+      const section = sections[key];
+      if (!section || !state.template.visibility[key] || !section.hasContent) return;
+      flowNodes.push(section.create());
       visibleContentCount += 1;
-    }
+    });
 
     if (visibleContentCount === 0) {
       flowNodes.push(createEmptyDocumentMessage());
@@ -1684,7 +1772,7 @@
   function createDocumentPage(context, pageNumber) {
     const page = createElement(
       "article",
-      `document-sheet document-page layout-${state.template.layout} font-${state.template.fontSize}`,
+      `document-sheet document-page ${documentTemplateClasses()}`,
     );
     const content = createElement("div", "document-page-content");
     const footer = createElement("footer", "document-page-footer");
@@ -2854,6 +2942,10 @@
       "portfolio",
     ];
     const validFontSizes = ["small", "medium", "large"];
+    const validPageMargins = ["preset", "narrow", "normal", "wide"];
+    const validSectionSpacings = ["preset", "tight", "normal", "relaxed"];
+    const validHeadingStyles = ["preset", "line", "numbered", "minimal"];
+    const validTitleAlignments = ["left", "center"];
     const previousDefaultIntro =
       "아래 문서는 입력된 내용을 바탕으로 제출용 가독성을 갖추어 정리한 취업 문서입니다.";
     const savedIntro =
@@ -2897,7 +2989,28 @@
       fontSize: validFontSizes.includes(source.fontSize)
         ? source.fontSize
         : fallback.fontSize,
+      pageMargin: validPageMargins.includes(source.pageMargin)
+        ? source.pageMargin
+        : fallback.pageMargin,
+      sectionSpacing: validSectionSpacings.includes(source.sectionSpacing)
+        ? source.sectionSpacing
+        : fallback.sectionSpacing,
+      headingStyle: validHeadingStyles.includes(source.headingStyle)
+        ? source.headingStyle
+        : fallback.headingStyle,
+      titleAlign: validTitleAlignments.includes(source.titleAlign)
+        ? source.titleAlign
+        : fallback.titleAlign,
+      sectionOrder: sanitizeSectionOrder(source.sectionOrder),
     };
+  }
+
+  function sanitizeSectionOrder(source) {
+    const validKeys = SECTION_DEFINITIONS.map((section) => section.key);
+    const savedOrder = Array.isArray(source)
+      ? source.filter((key) => validKeys.includes(key))
+      : [];
+    return [...new Set([...savedOrder, ...validKeys])];
   }
 
   function sanitizeTextObject(source, keys) {

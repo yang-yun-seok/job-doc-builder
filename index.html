@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="취업 준비생이 이력서와 자기소개서를 직접 정리하고 PDF로 저장할 수 있는 도구"
+      content="취업 준비생이 이력서와 자기소개서를 직접 정리하고 PDF, PPTX, Figma SVG로 저장할 수 있는 도구"
     />
     <title>나의 취업 서류 만들기</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="app.js" defer></script>
+    <link rel="stylesheet" href="style.css?v=20260720-3" />
+    <script src="vendor/pptxgen.bundle.js?v=20260720-3" defer></script>
+    <script src="app.js?v=20260720-3" defer></script>
+    <script src="export.js?v=20260720-3" defer></script>
   </head>
   <body>
     <header class="app-header">
@@ -34,6 +36,12 @@
         </button>
         <button class="button button-primary" id="print-document" type="button">
           PDF로 저장
+        </button>
+        <button class="button button-output" id="export-pptx" type="button">
+          PPTX로 저장
+        </button>
+        <button class="button button-output" id="export-svg" type="button">
+          Figma SVG
         </button>
       </div>
     </header>
@@ -166,6 +174,61 @@
               </div>
 
               <div class="preset-note" id="preset-note" aria-live="polite"></div>
+
+              <section class="manual-layout-panel" aria-labelledby="manual-layout-title">
+                <div class="manual-layout-heading">
+                  <div>
+                    <p class="section-kicker">선택 설정</p>
+                    <h3 id="manual-layout-title">내가 직접 배치하기</h3>
+                  </div>
+                  <p>원하는 부분만 바꿔도 돼요. 모든 출력 형식에 같이 반영됩니다.</p>
+                </div>
+
+                <div class="field-grid two-columns manual-layout-options">
+                  <div class="field">
+                    <label for="page-margin">페이지 여백</label>
+                    <select id="page-margin" data-template-field="pageMargin">
+                      <option value="preset">레이아웃 기본값</option>
+                      <option value="narrow">좁게</option>
+                      <option value="normal">보통</option>
+                      <option value="wide">넓게</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="section-spacing">항목 사이 간격</label>
+                    <select id="section-spacing" data-template-field="sectionSpacing">
+                      <option value="preset">레이아웃 기본값</option>
+                      <option value="tight">촘촘하게</option>
+                      <option value="normal">보통</option>
+                      <option value="relaxed">여유 있게</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="heading-style">항목 제목 모양</label>
+                    <select id="heading-style" data-template-field="headingStyle">
+                      <option value="preset">레이아웃 기본값</option>
+                      <option value="line">얇은 구분선</option>
+                      <option value="numbered">번호 강조</option>
+                      <option value="minimal">여백 중심</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="title-align">문서 제목 정렬</label>
+                    <select id="title-align" data-template-field="titleAlign">
+                      <option value="left">왼쪽</option>
+                      <option value="center">가운데</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="section-order-editor">
+                  <div>
+                    <strong>항목 순서</strong>
+                    <p>화살표를 눌러 먼저 보여줄 내용을 정하세요.</p>
+                  </div>
+                  <ol id="section-order-list" class="section-order-list"></ol>
+                </div>
+              </section>
             </div>
           </details>
 
@@ -509,8 +572,9 @@
             <p class="section-kicker">내 문서</p>
             <h2 id="preview-title">완성 문서 미리보기</h2>
             <p class="preview-tip">
-              PDF로 저장을 누른 뒤 인쇄 창에서 ‘PDF로 저장’을 선택하세요.
+              PDF·PPTX·Figma SVG 중 필요한 형식으로 저장할 수 있어요.
             </p>
+            <p class="export-status" id="export-status" aria-live="polite"></p>
           </div>
           <span class="paper-label" id="page-count">A4 · 1쪽</span>
         </div>
@@ -542,8 +606,8 @@
           <div>
             <h3>문서 모양을 먼저 정하세요</h3>
             <p>
-              맨 위의 00번에서 필요한 항목만 켜고 끌 수 있어요. 지원처가 요구하지
-              않는 내용은 체크를 해제하세요.
+              맨 위의 00번에서 필요한 항목만 켜고 끌 수 있어요. 여백과 구분선,
+              제목 정렬, 항목 순서도 직접 바꿀 수 있습니다.
             </p>
           </div>
         </section>
@@ -590,11 +654,11 @@
         <section>
           <span class="guide-step">6</span>
           <div>
-            <h3>PDF로 저장하세요</h3>
+            <h3>필요한 파일로 저장하세요</h3>
             <p>
-              상단의 PDF로 저장을 누르고 인쇄 창에서 대상을 ‘PDF로 저장’으로
-              선택하세요. 공용 PC에서는 사용 후 ‘처음부터 다시’를 눌러 내용을
-              지워 주세요.
+              PDF는 제출용, PPTX는 A4 슬라이드, Figma SVG는 추가 편집용으로
+              활용할 수 있어요. 공용 PC에서는 사용 후 ‘처음부터 다시’를 눌러
+              내용을 지워 주세요.
             </p>
           </div>
         </section>
